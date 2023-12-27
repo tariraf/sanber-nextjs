@@ -16,6 +16,25 @@ export default function Notes() {
             console.log(err)
         })
         }, [])
+
+    const handleDelete = async (event) => {
+        event.preventDefault()
+
+        const id = event.target.value
+        try {
+            const response = await fetch(`/api/delete_notes?id=${id}`, {
+              method: 'DELETE'
+            })
+      
+            const responseData = await response.json();
+            console.log('Notes deleted successfully:', responseData)
+            if (responseData?.success) {
+                route.reload()
+            }
+          } catch (error) {
+            console.error('Error adding notes:', error.message)
+          }
+    }
     return (
     <Layout>
         <div className="flex flex-col items-center p-4">
@@ -35,8 +54,8 @@ export default function Notes() {
                                     <div className="flex space-x-8 pt-10 items-center">
                                         <p className="text-stone-300 font-bold">{data.created_at.substring(0, 10)}</p>
                                         <div className="space-x-2">
-                                            <button className="w-16 py-1 text-yellow-800 rounded">Edit</button>
-                                            <button className="w-16 py-1 bg-red-800 rounded text-white">Delete</button>
+                                            <button className="w-16 py-1 text-yellow-800 rounded font-bold" onClick={(e) => {e.preventDefault(); route.push(`/notes/edit/${data.id}`)}}>Edit</button>
+                                            <button className="w-16 py-1 bg-red-800 rounded text-white font-bold" onClick={handleDelete} value={data.id}>Delete</button>
                                         </div>
                                     </div>
                                 </div>

@@ -1,7 +1,18 @@
 import Layout from "@/layout";
+import { useEffect, useState } from "react";
 
-export default function NotesDetails({notes}) {
- const data = notes.data
+export default function NotesDetails() {
+ const [notes, setNotes] = useState()
+ useEffect(()=> {
+    fetch("/api/notes_api")
+    .then(res => res.json())
+    .then((res) => {
+      setNotes(res.data)
+    })
+    .catch((err) => {
+      console.log(err)
+    })
+  }, [])
  return (
   <Layout>
     <div className="flex gap-2 py-10 flex-col px-20">

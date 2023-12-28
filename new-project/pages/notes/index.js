@@ -1,39 +1,38 @@
+import { useMutation } from "@/hooks/useMutation";
+import { useQueries } from "@/hooks/useQueries";
 import Layout from "@/layout";
+import { Button, Spinner } from "@chakra-ui/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
 
 export default function Notes() {
-    const [notes, setNotes] = useState()
+    const queriesResult = useQueries({prefixUrl : "/api/notes_api"})
+    const {data, isLoading, isError} = queriesResult
     const route = useRouter()
-    useEffect(()=> {
-        fetch("/api/notes_api")
-        .then(res => res.json())
-        .then((res) => {
-            setNotes(res.data)
-        })
-        .catch((err) => {
-            console.log(err)
-        })
-        }, [])
-
+    const {mutate} = useMutation()
     const handleDelete = async (event) => {
         event.preventDefault()
 
         const id = event.target.value
-        try {
-            const response = await fetch(`/api/delete_notes?id=${id}`, {
-              method: 'DELETE'
-            })
+        const result = await mutate({url: `/api/delete_notes?id=${id}`, method : 'DELETE'})
+
+        if (result?.success) {
+            console.log('Notes deleted successfully:', result)
+            route.reload()
+        }
+        // try {
+        //     const response = await fetch(`/api/delete_notes?id=${id}`, {
+        //       method: 'DELETE'
+        //     })
       
-            const responseData = await response.json();
-            console.log('Notes deleted successfully:', responseData)
-            if (responseData?.success) {
-                route.reload()
-            }
-          } catch (error) {
-            console.error('Error adding notes:', error.message)
-          }
+        //     const responseData = await response.json();
+        //     console.log('Notes deleted successfully:', responseData)
+        //     if (responseData?.success) {
+        //         route.reload()
+        //     }
+        //   } catch (error) {
+        //     console.error('Error adding notes:', error.message)
+        //   }
     }
     return (
     <Layout>
@@ -43,11 +42,14 @@ export default function Notes() {
                         onClick={() => {route.push('/notes/add')}}
                 >Add Notes</button>
             </div>
-            <div className="grid grid-cols-3 gap-4 py-12">
+            {
+                isLoading? 
+                <Spinner size='xl' marginY={10}/> :
+                <div className="grid grid-cols-3 gap-4 py-12">
                 {
-                    notes?.map((data) => {
+                    data?.data?.map((data, index) => {
                         return (
-                                <div className="p-3 border border-solid border-yellow-800 rounded-lg">
+                                <div className="p-3 border border-solid border-yellow-800 rounded-lg" key={index}>
                                     <h3 className="font-bold">{data.title}</h3>
                                     <p>{data.description}</p>
                                     
@@ -63,6 +65,16 @@ export default function Notes() {
                     })
                 }
             </div>
+            }
+            {
+                isError && (
+                    <div className="flex flex-col items-center my-10">
+                        <p>Ooops there might be something wrong!</p>
+                        <Button onClick={(e) => {e.preventDefault(); route.reload()}}>Refresh Page</Button>
+                    </div>
+                )
+                
+            }
         </div>
     </Layout>
     );

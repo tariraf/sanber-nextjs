@@ -1,33 +1,27 @@
+import { useMutation } from "@/hooks/useMutation";
+import { useQueries } from "@/hooks/useQueries";
 import Layout from "@/layout";
-import { Button, Card, Grid, GridItem, Heading, Input, Text, Textarea } from "@chakra-ui/react";
+import { Button, Card, Grid, GridItem, Heading, Input, Spinner, Text, Textarea } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 export default function EditNotes () {
-    const [input, setInput] = useState({
-        title : "",
-        description : ""
-    })
     const route = useRouter()
     const {id} = route.query
-
-    useEffect(()=> {
-        fetch(`/api/notes_id?id=${id}`)
-        .then(res => res.json())
-        .then((res) => {
-            const data = res.data
-            console.log(data)
-            setInput(
-                {
-                    title : data.title,
-                    description : data.description
-                }
-            )
-        })
-        .catch((err) => {
-            console.log(err)
-        })
-        }, [id])
+    const queriesResult = useQueries({prefixUrl : `/api/notes_id?id=${id}`})
+    const {data, isLoading, isError} = queriesResult
+    const [input, setInput] = useState({
+        title : '',
+        description : ''
+    })
+    const {mutate} = useMutation()
+    
+    useEffect(() => {
+        setInput({
+          title: data?.data?.title || '',
+          description: data?.data?.description || '',
+        });
+    }, [data]);
 
     const handleChange = (event) => {
         let name = event.target.name;
@@ -39,28 +33,43 @@ export default function EditNotes () {
     const handleSubmit = async (event) => {
         event.preventDefault()
 
-        try {
-            const response = await fetch(`/api/update_notes?id=${id}`, {
-              method: 'PATCH',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(input),
-            })
+        const result = await mutate({url: `/api/update_notes?id=${id}`, method : 'PATCH', payload : input})
+        
+        if (result?.success) {
+            console.log('Notes edited successfully:', result)
+            route.push('/notes')
+        }
+
+        // try {
+        //     setIsLoading(true)
+        //     const response = await fetch(`/api/update_notes?id=${id}`, {
+        //       method: 'PATCH',
+        //       headers: {
+        //         'Content-Type': 'application/json',
+        //       },
+        //       body: JSON.stringify(input),
+        //     })
       
-            const responseData = await response.json();
-            console.log('Notes updated successfully:', responseData)
-            if (responseData?.success) {
-                route.push('/notes')
-            }
-          } catch (error) {
-            console.error('Error adding notes:', error.message)
-          }
+        //     const responseData = await response.json();
+        //     console.log('Notes updated successfully:', responseData)
+        //     if (responseData?.success) {
+        //         route.push('/notes')
+        //         setIsLoading(false)
+        //     }
+        //   } catch (error) {
+        //     console.error('Error adding notes:', error.message)
+        //     setIsLoading(false)
+        //   }
     }
     return (
         <Layout>
             <Card margin="5" padding="5">
                 <Heading>Edit Notes</Heading>
+                {
+                    isLoading? 
+                <div className="text-center">
+                    <Spinner size='xl'/>
+                </div> :
                 <Grid gap="4">
                     <GridItem>
                         <Text>
@@ -78,6 +87,7 @@ export default function EditNotes () {
                         <Button onClick={handleSubmit}>Submit</Button>
                     </GridItem>
                 </Grid>
+                }
             </Card>
         </Layout>
     )

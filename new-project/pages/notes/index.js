@@ -2,14 +2,15 @@ import { useMutation } from "@/hooks/useMutation";
 import { useQueries } from "@/hooks/useQueries";
 import Layout from "@/layout";
 import { Button, Spinner } from "@chakra-ui/react";
-import Link from "next/link";
 import { useRouter } from "next/router";
-
+import fetcher from "@/utils/fetcher";
+import useSWR from "swr";
 export default function Notes() {
-    const queriesResult = useQueries({prefixUrl : "/api/notes_api"})
-    const {data, isLoading, isError} = queriesResult
+    // const queriesResult = useQueries({prefixUrl : "/api/notes_api"})
+    // const {data, isLoading, isError} = queriesResult
     const route = useRouter()
     const {mutate} = useMutation()
+    const { data, error, isLoading } = useSWR("/api/notes_api", fetcher, {revalidateOnFocus: true})
     const handleDelete = async (event) => {
         event.preventDefault()
 
@@ -67,7 +68,7 @@ export default function Notes() {
             </div>
             }
             {
-                isError && (
+                error && (
                     <div className="flex flex-col items-center my-10">
                         <p>Ooops there might be something wrong!</p>
                         <Button onClick={(e) => {e.preventDefault(); route.reload()}}>Refresh Page</Button>

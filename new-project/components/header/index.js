@@ -5,13 +5,11 @@ import { useQueries } from "@/hooks/useQueries"
 import Cookies from "js-cookie"
 import { useMutation } from "@/hooks/useMutation"
 import { useRouter } from "next/router"
+import { useContext } from "react"
+import { UserContext } from "@/context/userContext"
 export default function Header() {
-    const {data} = useQueries({
-        prefixUrl: "https://paace-f178cafcae7b.nevacloud.io/api/user/me",
-        headers: {
-            'Authorization': `Bearer ${Cookies.get("user_token")}`
-        }
-    })
+    const state = useContext(UserContext)
+    const {userData} = state
     const {mutate} = useMutation()
     const route = useRouter()
     const handleLogout = async (event) => {
@@ -43,7 +41,7 @@ export default function Header() {
                 <li><Link href="/products">Products</Link></li>
                 <li><Menu>
                         <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
-                            {data?.data?.name}
+                            {userData?.name}
                         </MenuButton>
                         <MenuList>
                             <MenuItem color='black' onClick={handleLogout}>Logout</MenuItem>

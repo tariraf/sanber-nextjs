@@ -15,7 +15,7 @@ export default function EditNotes () {
         description : ''
     })
     const {mutate} = useMutation()
-    
+    console.log(id)
     useEffect(() => {
         setInput({
           title: data?.data?.title || '',
